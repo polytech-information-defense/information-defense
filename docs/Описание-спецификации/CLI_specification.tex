@@ -1,0 +1,326 @@
+\documentclass[a4paper, final]{article}
+%\usepackage{literat} % Нормальные шрифты
+\usepackage[14pt]{extsizes} % для того чтобы задать нестандартный 14-ый размер шрифта
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage[left=25mm, top=20mm, right=20mm, bottom=20mm, footskip=10mm]{geometry}
+\usepackage{ragged2e} %для растягивания по ширине
+\usepackage{setspace} %для межстрочного интервала
+\usepackage{indentfirst} % для абзацного отступа
+\usepackage{moreverb} %для печати в листинге исходного кода программ
+\renewcommand\verbatimtabsize{4\relax}
+\renewcommand\listingoffset{0.2em} %отступ от номеров строк в листинге
+\renewcommand{\arraystretch}{1.4} % изменяю высоту строки в таблице
+\usepackage[font=small, singlelinecheck=false, justification=raggedright, format=plain, labelsep=period]{caption} %для настройки заголовка таблицы
+\captionsetup[listing]{justification=raggedleft, singlelinecheck=false}
+\usepackage{amssymb}
+\usepackage{listings} %листинги
+\usepackage{xcolor} % цвета
+\usepackage{hyperref}% для гиперссылок
+\usepackage{enumitem} %для перечислений
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{grffile}
+\usepackage{subcaption}
+%\makeatletter 
+%\@namedef{ver@float.sty}{3000/12/31}
+%\makeatother
+\usepackage{minted}
+\usepackage{longtable}
+%\usemintedstyle{vs}
+\definecolor{LightGray}{gray}{0.9}
+\usepackage{subcaption}
+\setlist[enumerate,itemize]{leftmargin=1.2cm} %отступ в перечислениях
+
+% Настройка цветов
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Стиль для листингов
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=t,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single
+}
+
+\lstset{style=mystyle}
+
+\hypersetup{colorlinks,
+	allcolors=[RGB]{010 090 200}} %красивые гиперссылки (не красные)
+
+\newcommand{\op}{\mathbin{\text{\texttt{<>}}}}
+\newcommand{\mempty}{\text{\texttt{mempty}}}
+
+\usepackage{dirtree}
+\usepackage{tabularx}
+\begin{document}
+
+\section{Спецификация командного интерфейса управления (CLI)}
+
+\subsection{Общие принципы работы}
+Командный интерфейс (CLI) предназначен для локального (через консоль) и удаленного (по протоколу SSH согласно ДСТ-07) управления ПО МЭ. Взаимодействие осуществляется в интерактивной оболочке. Синтаксис команд имеет иерархическую структуру:
+\begin{center}
+\texttt{<объект> <действие> [аргументы]}
+\end{center}
+
+При работе CLI соблюдаются следующие требования спецификации:
+\begin{itemize}
+    \item \textbf{Аутентификация (ДСТ-01):} Доступ к оболочке возможен только после ввода логина и пароля.
+    \item \textbf{Разграничение прав (ДСТ-03):} Функции разделены на уровни ЧЗ (Чтение/Запись) и ТЧ (Только чтение). Попытка вызова команды уровня ЧЗ пользователем с правами ТЧ отклоняется с выдачей сообщения и регистрацией события с кодом 106 (согласно Приложению А).
+    \item \textbf{Валидация данных (НДЖ-04):} Все вводимые администратором команды и их аргументы должны проходить проверку на корректность. Для команд проверяется правильность синтаксиса, для передаваемых данных — соответствие форматам (IP-адреса, MAC-адреса) и допустимым диапазонам значений (номера портов, типы ICMP). Некорректные команды и значения отклоняются с выдачей сообщения об ошибке без изменения состояния ПО МЭ.
+    \item \textbf{Подтверждение операций (УПР-15):} Опасные операции (перезагрузка, очистка логов, удаление учетных записей) требуют интерактивного подтверждения вводом \texttt{y} или \texttt{n}.
+\end{itemize}
+
+\subsection{Справочник команд}
+
+\subsubsection{Политика доступа (Правила фильтрации)}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления политикой доступа} \label{tab:rules} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{rule show} & \texttt{[-{}-num=<id>]} & Просмотр всех или одного правила & ЧЗ, ТЧ \\ \hline
+\texttt{rule add} & 
+\texttt{-{}-num=<id>}\newline 
+\texttt{-{}-action=<pass|drop|jump>}\newline 
+\texttt{[-{}-in=<portX>]}\newline 
+\texttt{[-{}-src-mac=<mac>]}\newline 
+\texttt{[-{}-dst-mac=<mac>]}\newline 
+\texttt{[-{}-src-ip=<ip/cidr>]}\newline 
+\texttt{[-{}-dst-ip=<ip/cidr>]}\newline 
+\texttt{[-{}-proto=<tcp|udp|icmp|any>]}\newline 
+\texttt{[-{}-src-port=<port>]}\newline 
+\texttt{[-{}-dst-port=<port>]}\newline 
+\texttt{[-{}-icmp-type=<0-255>]}\newline 
+\texttt{[-{}-icmp-code=<0-255>]}\newline 
+\texttt{[-{}-out=<portX>]}\newline 
+\texttt{[-{}-jump=<rule\_id>]}\newline 
+\texttt{[-{}-stateful=<yes|no>]}\newline 
+\texttt{[-{}-active=<yes|no>]}\newline 
+\texttt{[-{}-log=<yes|no>]}\newline 
+\texttt{[-{}-comment=<text>]}\newline 
+\texttt{[-{}-nat-type=<none|snat|dnat>]}\newline 
+\texttt{[-{}-nat-ip=<ip>]} 
+& Добавление нового правила & ЧЗ \\ \hline
+
+\texttt{rule edit} & 
+\texttt{-{}-num=<id>}\newline 
+\texttt{[-{}-in=<portX>]}\newline 
+\texttt{[-{}-src-mac=<mac>]}\newline 
+\texttt{[-{}-dst-mac=<mac>]}\newline 
+\texttt{[-{}-src-ip=<ip/cidr>]}\newline 
+\texttt{[-{}-dst-ip=<ip/cidr>]}\newline 
+\texttt{[-{}-proto=<tcp|udp|icmp|any>]}\newline 
+\texttt{[-{}-src-port=<port>]}\newline 
+\texttt{[-{}-dst-port=<port>]}\newline 
+\texttt{[-{}-icmp-type=<0-255>]}\newline 
+\texttt{[-{}-icmp-code=<0-255>]}\newline 
+\texttt{[-{}-action=<pass|drop|jump>]}\newline 
+\texttt{[-{}-out=<portX>]}\newline 
+\texttt{[-{}-jump=<rule\_id>]}\newline 
+\texttt{[-{}-stateful=<yes|no>]}\newline 
+\texttt{[-{}-active=<yes|no>]}\newline 
+\texttt{[-{}-log=<yes|no>]}\newline 
+\texttt{[-{}-comment=<text>]}\newline 
+\texttt{[-{}-nat-type=<none|snat|dnat>]}\newline 
+\texttt{[-{}-nat-ip=<ip>]} 
+& Изменение правила & ЧЗ \\ \hline
+\texttt{rule delete} & \texttt{-{}-num=<id>} & Удаление правила & ЧЗ \\ \hline
+\texttt{rule renumber} & \texttt{-{}-old=<id> \newline -{}-new=<id>} & Перенумерация правила & ЧЗ \\ \hline
+\texttt{rule toggle} & \texttt{-{}-num=<id>} & Активация / \newline деактивация правила & ЧЗ \\ \hline
+
+\end{longtable}
+
+\subsubsection{Журналы (События и Пакеты)}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления журналами} \label{tab:logs} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{log events} & \texttt{[-{}-code=<code>] \newline  [-{}-start=<time>] \newline  [-{}-end=<time>]} & Просмотр журнала событий с фильтрацией & ЧЗ, ТЧ \\ \hline
+\texttt{log packets} & \texttt{[-{}-action=<pass|drop>] \newline [-{}-in=<portX>] \newline  [-{}-out=<portX>] \newline [-{}-rule=<id>]\newline [-{}-src-mac=<mac>] \newline [-{}-dst-mac=<mac>] \newline [-{}-src-ip=<ip>] \newline [-{}-dst-ip=<ip>] \newline [-{}-src-port=<port>] \newline [-{}-dst-port=<port>] \newline  [-{}-start=<time>] \newline [-{}-end=<time>]} & Просмотр журнала пакетов с фильтрацией (логическое «И») & ЧЗ, ТЧ \\ \hline
+\texttt{log packets clear} & & Очистка журнала пакетов & ЧЗ \\ \hline
+\end{longtable}
+
+\subsubsection{Контроль состояний (Сессии)}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления контролем состояний} \label{tab:states} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{state config} & & Просмотр настроек механизма & ЧЗ, ТЧ \\ \hline
+\texttt{state set} & 
+\texttt{[-{}-enable=<yes|no>]}\newline  
+\texttt{[-{}-tcp-est=<sec>]}\newline  
+\texttt{[-{}-tcp-other=<sec>]}\newline  
+\texttt{[-{}-tcp-syn=<sec>]}\newline  
+\texttt{[-{}-udp=<sec>]}\newline  
+\texttt{[-{}-icmp=<sec>]}\newline  
+\texttt{[-{}-max-entries=<num>]} 
+& Настройка параметров механизма & ЧЗ \\ \hline
+\texttt{state table} & & Просмотр активных записей таблицы & ЧЗ, ТЧ \\ \hline
+\texttt{state delete} & \texttt{-{}-id=<id> | -{}-all} & Удаление записей таблицы & ЧЗ \\ \hline
+\end{longtable}
+
+\subsubsection{Конфигурации}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления конфигурациями} \label{tab:configs} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{config save} & & Сохранение текущей конфигурации & ЧЗ \\ \hline
+\texttt{config show} & \texttt{[-{}-saved]} & Вывод текущей или сохраненной конфигурации & ЧЗ, ТЧ \\ \hline
+\texttt{config apply} & & Применение сохраненной конфигурации & ЧЗ \\ \hline
+\texttt{config default} & & Применение конфигурации по умолчанию & ЧЗ \\ \hline
+\end{longtable}
+
+\subsubsection{Учетные записи и сеансы}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления учетными записями} \label{tab:users} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{user add} & \texttt{-{}-login=<name> \newline  -{}-role=<rw|ro> \newline -{}-password=<pass>} & Добавление учетной записи & ЧЗ \\ \hline
+\texttt{user delete} & \texttt{-{}-login=<name>} & Удаление учетной записи & ЧЗ \\ \hline
+\texttt{user edit} & \texttt{-{}-login=<name> \newline  [-{}-role=<rw|ro>]} & Редактирование учетной записи & ЧЗ \\ \hline
+\texttt{user list} & & Просмотр базы учетных записей & ЧЗ, ТЧ \\ \hline
+\texttt{user passwd} & \texttt{-{}-new-pass=<pass>} & Смена собственного пароля & ЧЗ, ТЧ \\ \hline
+\texttt{session list} & & Просмотр активных сеансов & ЧЗ, ТЧ \\ \hline
+\texttt{session kill} & \texttt{-{}-id=<session\_id>} & Принудительный сброс сеанса & ЧЗ \\ \hline
+\end{longtable}
+
+\subsubsection{Сетевые интерфейсы (Порты)}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления сетевыми интерфейсами} \label{tab:interfaces} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{interface show} & \texttt{[-{}-name=<portX>]} & Просмотр состояния интерфейсов & ЧЗ, ТЧ \\ \hline
+\texttt{interface set} & \texttt{-{}-name=<portX> \newline  -{}-state=<up|down>} & Включение/ \newline выключение интерфейса & ЧЗ \\ \hline
+\texttt{interface ip} & \texttt{-{}-name=<portX> \newline  -{}-set=<ip/mask> | -{}-del} & Настройка IP-адреса интерфейса & ЧЗ \\ \hline
+\end{longtable}
+
+\subsubsection{Системные настройки}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{7.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции системных настроек и режимов} \label{tab:system} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{system time} & \texttt{[-{}-set=<YYYY-MM-DD HH:MM:SS>]} & Просмотр и настройка даты и времени & ЧЗ, ТЧ \\ \hline
+\texttt{system route} & \texttt{[-{}-add=<net> -{}-gw=<ip>] [-{}-del=<net>]} & Управление системными маршрутами & ЧЗ, ТЧ \\ \hline
+\texttt{system params} & \texttt{[-{}-session-timeout=<min>] [-{}-log-size=<mb>] [-{}-integrity-period=<min>]} & Изменение параметров контроля целостности, регистрации, сеансов & ЧЗ \\ \hline
+\texttt{system integrity} & \texttt{[-{}-check]} & Проверка целостности файлов по запросу & ЧЗ, ТЧ \\ \hline
+\texttt{system info} & & Просмотр системной информации (CPU, RAM, интерфейсы, статус подсистем) & ЧЗ, ТЧ \\ \hline
+\texttt{system reboot} & & Перезагрузка изделия & ЧЗ \\ \hline
+\texttt{system shutdown} & & Выключение изделия & ЧЗ \\ \hline
+\texttt{system subsys} & \texttt{-{}-reboot=<subsystem\_name>} & Перезагрузка подсистемы ПО МЭ & ЧЗ \\ \hline
+\end{longtable}
+
+\subsection{Работа в режиме аварийной поддержки (ЦЛС-05)}
+
+При выявлении нарушения целостности хотя бы одного контролируемого файла (ЦЛС-04) ПО МЭ блокирует весь обрабатываемый трафик на всех интерфейсах, регистрирует событие с указанием файлов с нарушенной целостностью и переходит в режим аварийной поддержки. 
+
+В данном режиме доступно только локальное управление через CLI после аутентификации администратора с правами ЧЗ. Перечень доступных команд и их аргументов приведен в таблице \ref{tab:emergency_cmds}.
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{3cm}|>{\raggedright\arraybackslash}p{6.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{2cm}|}
+\caption{Функции управления в режиме аварийной поддержки} \label{tab:emergency_cmds} \\
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endfirsthead
+\hline
+\textbf{Команда} & \textbf{Аргументы} & \textbf{Описание} & \textbf{Права} \\ \hline
+\endhead
+\texttt{integrity list} & & Просмотр перечня файлов с нарушенной целостностью & ЧЗ \\ \hline
+
+\texttt{integrity restore} & \texttt{[-{}-file=<filename>]}\newline \texttt{[-{}-all]} & Восстановление конкретного файла или всех файлов из резервной копии & ЧЗ \\ \hline
+
+\texttt{system integrity} & \texttt{-{}-check} & Повторная проверка целостности (используется существующая команда) & ЧЗ \\ \hline
+
+\texttt{log events} & \texttt{[-{}-code=<code>]}\newline \texttt{[-{}-start=<time>]}\newline \texttt{[-{}-end=<time>]} & Просмотр журнала событий с фильтрацией & ЧЗ \\ \hline
+
+\texttt{system reboot} & & Перезагрузка изделия & ЧЗ \\ \hline
+\texttt{system shutdown} & & Выключение изделия & ЧЗ \\ \hline
+\end{longtable}
+
+Обработка трафика возобновляется автоматически после того, как повторная проверка (команда \texttt{system integrity -{}-check}) подтвердит целостность всех контролируемых файлов. Выход из режима аварийной поддержки регистрируется в журнале событий (ЦЛС-06).
+
+\subsection{Примеры выполнения команд}
+
+\textbf{Пример 1. Добавление правила (Права ЧЗ):}
+\begin{verbatim}
+admin@firewall> rule add --num=10 --in=port1 --src-ip=192.168.1.0/24 
+--proto=tcp --dst-port=80 --action=pass --comment="Allow Web"
+[УСПЕХ] Код: 300 | Описание: Добавление правила
+\end{verbatim}
+
+\textbf{Пример 2. Отказ в доступе (Недостаточно прав):}
+\begin{verbatim}
+user_ro@firewall> interface set --name=port1 --state=down
+[ОШИБКА] Код: 106 | Описание: Отказ в выполнении функции | Причина: 
+Недостаточно прав (требуется уровень ЧЗ)
+\end{verbatim}
+
+\textbf{Пример 3. Понижение прав при повторном входе (ДСТ-05):}
+\begin{verbatim}
+admin2@firewall> login
+Пароль: ********
+[УСПЕХ] Код: 105 | Описание: Понижение прав сеанса до «только чтение»
+\end{verbatim}
+
+\textbf{Пример 4. Подтверждение опасной операции (УПР-15):}
+\begin{verbatim}
+admin@firewall> system reboot
+[ВНИМАНИЕ] Вы собираетесь перезагрузить изделие. Вы уверены? (y/n): y
+[УСПЕХ] Код: 202 | Описание: Перезагрузка изделия
+\end{verbatim}
+
+\textbf{Пример 5. Проверка корректности ввода (НДЖ-04):}
+\begin{verbatim}
+admin@firewall> rule add --num=5 --dst-port=99999 --action=drop
+[ОШИБКА] Код: 300 | Описание: Добавление правила | Причина: 
+Некорректное значение аргумента '--dst-port'. Допустимый диапазон: 
+1-65535
+\end{verbatim}
+
+\end{document}
