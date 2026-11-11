@@ -1,0 +1,26 @@
+# Подсистема контроля целостности ПО МЭ (ЦЛС-01 -- ЦЛС-07)
+[Unit]
+Description=ПО МЭ: подсистема контроля целостности
+After=local-fs.target systemd-tmpfiles-setup.service
+# Запускается раньше подсистем, которые проверяет: fw-filter и fw-web
+# стартуют только после READY=1, то есть после проверки при запуске.
+Before=fw-filter.service fw-web.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+Environment=PYTHONPATH=/usr/lib/fw
+# Новые .pyc не создаются: байткод собирается при установке и контролируется
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m fw_integrity run
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=300
+# Процесс работает от root: читает все контролируемые файлы,
+# восстанавливает их и останавливает службы в аварийном режиме.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

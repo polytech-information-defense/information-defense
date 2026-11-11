@@ -1,0 +1,18 @@
+{
+  "static": [
+    "/usr/lib/fw/**",
+    "/etc/systemd/system/fw-*.service",
+    "/etc/systemd/system/fw-*.service.d/*.conf",
+    "/etc/tmpfiles.d/fw.conf",
+    "/etc/ssh/sshd_config.d/fw.conf",
+    "/etc/fw/default.conf",
+    "/etc/fw/tls/*"
+  ],
+  "config": [
+    "/etc/fw/startup.conf",
+    "/var/lib/fw/policy.json",
+    "/var/lib/fw/system.json",
+    "/var/lib/fw/accounts.json"
+  ],
+  "exclude": []
+}

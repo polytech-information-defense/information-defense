@@ -1,0 +1,18 @@
+{
+  "manifest_path": "/etc/fw/integrity/manifest.json",
+  "state_dir": "/var/lib/fw/integrity",
+  "socket_path": "/run/fw/integrity.sock",
+  "socket_group": "fwapi",
+  "log_socket": "/run/fw/log.sock",
+  "filter_socket": "/run/fw/filter.sock",
+  "emergency_stop_units": ["fw-filter.service", "fw-web.service", "ssh.service"],
+  "pending_timeout_s": 60,
+  "request_timeout_s": 3,
+  "os_check": {
+    "enabled": false,
+    "ports": ["enp1s0", "enp2s0"],
+    "service_ifaces": ["fwtap1", "fwtap2"],
+    "nft_table": "fw",
+    "expected_mtu": 1500
+  }
+}
