@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Firewall Configuration",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "num": { "type": "integer", "minimum": 1 },
+          "action": { "type": "string", "enum": ["pass", "drop", "jump"] },
+          "in": { "type": "string", "pattern": "^(any|port[1-6](,port[1-6])*)$" },
+          "src_mac": { "type": "string", "pattern": "^(any|([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))$" },
+          "dst_mac": { "type": "string", "pattern": "^(any|([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))$" },
+          "src_ip": { "type": "string", "pattern": "^(any|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\/(3[0-2]|[12]?[0-9]))?)$" },
+          "dst_ip": { "type": "string", "pattern": "^(any|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\/(3[0-2]|[12]?[0-9]))?)$" },
+          "proto": {  
+            "anyOf": [ 
+              { "type": "string", "enum": ["tcp", "udp", "icmp", "any"] },
+              { "type": "integer", "minimum": 0, "maximum": 255 } 
+              ],
+              "description": "Номер протокола (0-255) или мнемоническое обозначение ('tcp', 'udp', 'icmp');"
+            },
+          "src_port": { 
+            "anyOf": [
+              { "type": "integer", "minimum": 1, "maximum": 65535 },
+              { "type": "string", "pattern": "^(any|([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])-([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))$" }
+            ],
+            "description": "Число (1-65535), диапазон (например, '1024-2048') или 'any'"
+          },
+          "dst_port": { 
+            "anyOf": [
+              { "type": "integer", "minimum": 1, "maximum": 65535 },
+              { "type": "string", "pattern": "^(any|([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])-([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))$" }
+            ],
+            "description": "Число (1-65535), диапазон (например, '80-80') или 'any'"
+          },
+          "icmp_type": { 
+            "anyOf": [
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "string", "enum": ["any"] }
+            ],
+            "description": "Тип ICMPv4 (0-255) или 'any'"
+          },
+          "icmp_code": { 
+            "anyOf": [
+              { "type": "integer", "minimum": 0, "maximum": 255 },
+              { "type": "string", "enum": ["any"] }
+            ],
+            "description": "Код ICMPv4 (0-255) или 'any'"
+          },
+          "out": { 
+            "type": ["string", "null"],
+            "pattern": "^(any|port[1-6](,port[1-6])*)$"
+          },
+          "jump": { "type": ["integer", "null"], "minimum": 1 },
+          "stateful": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "log": { "type": "boolean" },
+          "comment": { "type": "string", "maxLength": 255 },
+          "nat_type": {
+             "type": ["string", "null"], 
+             "enum": ["snat", "dnat"],
+            "description": "Тип трансляции адресов. Значение null означает отсутствие трансляции."
+           },
+          "nat_ip": { 
+            "type": ["string", "null"],
+            "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" 
+          }  
+        },
+        "required": [
+          "num", "action", "in", "src_mac", "dst_mac", "src_ip", "dst_ip", 
+          "proto", "src_port", "dst_port", "icmp_type", "icmp_code", 
+          "out", "jump", "stateful", "active", "log", "comment", 
+          "nat_type", "nat_ip"
+        ]
+      }
+    },
+    "interfaces": { "type": "object" },
+    "routes": { "type": "array" },
+    "state_control": { "type": "object" },
+    "logging": { "type": "object" },
+    "integrity": { "type": "object" },
+    "session_params": { "type": "object" }
+  },
+  "required": ["rules", "interfaces", "routes", "state_control", "logging", "integrity", "session_params"]
+}
