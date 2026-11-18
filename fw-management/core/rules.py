@@ -233,11 +233,11 @@ def show_rules(num: int = None) -> dict:
     if num is not None:
         for r in rules:
             if r["num"] == num:
-                return {"status": "success", "code": 0, "data": r}
-        return {"status": "error", "code": 0, "reason": f"Правило №{num} не найдено."}
+                return r
+        return None
 
     # Если номер правила не был задан, выводим все правила
-    return {"status": "success", "code": 0, "data": rules}
+    return rules
 
 
 def add_rule(rule_data: dict) -> dict:
