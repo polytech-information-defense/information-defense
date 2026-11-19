@@ -1,0 +1,142 @@
+body {
+    margin: 0;
+    background-color: #006400;       
+    font-family: Arial, sans-serif;
+}
+
+.page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stage {
+    display: flex;
+    position: relative;
+}
+
+.content-area {
+
+    left: -33px;
+    width: 1151px;
+    height: 904px;
+    box-sizing: border-box;  
+    border-radius: 0 50px 50px 0; 
+    overflow: hidden;  
+    background-color: #95A8A0;
+    border: 5px solid #000000;
+
+    box-shadow: 8px 8px 6px rgba(0, 0, 0, 0.8);
+
+    color: #000000;
+    font-size: 24px;
+    text-decoration: none;
+    cursor: pointer;
+
+    z-index: 2;
+    position: relative;
+    padding: 30px;
+
+}
+
+.left-buttons {
+
+    position: relative;
+    left: 14px;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;   /* выравнивание по левому краю */
+    gap: 20px;            
+    width: 288px;
+    height: 904px;
+    box-sizing: border-box;  
+
+
+    overflow: hidden;
+    z-index: 1;
+}
+
+.menu-button {
+    display: flex;
+    align-items: center;    
+    justify-content: center;
+    width: 288px;
+    height: 83px;
+    box-sizing: border-box;  
+    border-radius: 50px;   
+    overflow: hidden;  
+    background-color: #7A8480;
+    border: 5px solid #000000;
+
+    /* Effects → Drop shadow (X=-4, Y=4, Blur=0) */
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+
+    /* Текст */
+    color: #000000;
+    font-size: 24px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-button.active {
+    background-color: #95A8A0;
+    box-shadow: 8px 8px 6px rgba(0, 0, 0, 0.8);
+}
+
+
+.scroll-container {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.item-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+}
+
+.item-text {
+    font-size: 17px;
+    color: #134e4a;
+}
+
+.delete-button {
+    background-color: #ff6b6b;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: -2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.hello-world {
+    height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+
+.scroll-container::-webkit-scrollbar { width: 8px; }
+.scroll-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+}
